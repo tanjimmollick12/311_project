@@ -22,6 +22,7 @@ import EditProduct from './Admin/pages/newProduct/EditProduct'
 import Delivery_Status from "./Admin/pages/orders/Delivery_Status";
 import ProductPage from "./Pages/productPage/ProductPage";
 import UserProfile from "./Pages/userProfile/UserProfile";
+import emailVer from "./Admin/pages/signup/emailVer";
 function App() {
   return (
 
@@ -45,6 +46,8 @@ function App() {
       <Route path='/username' component={UserProfile} exact />
       <Route path='/login' component={SignIn} exact />
       <Route path='/' component={HomePage} exact />
+      <Route path='/verifiedemail' component={emailVer}/>
+      
     </Router>
 
 

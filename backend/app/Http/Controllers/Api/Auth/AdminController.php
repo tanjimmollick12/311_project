@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ class AdminController extends Controller
         //validation
         $validator = $this->validate($request, [
             'name' => 'required',
-            'email' => 'required|email|unique:admin',
+            'email' => 'required|email|',
             'password' => 'required|confirmed'
         ]);
         //create data
@@ -23,10 +24,10 @@ class AdminController extends Controller
 
         if ($admin->isEmpty()) {
             $admin = new Admin();
-            $admin->name = $request->name;
-            $admin->email = $request->email;
-            $admin->password = Hash::make($request->password);
-            $admin->phone = ($request->phone);
+            $admin->name = $request->input('name');
+            $admin->email = $request->input('email');
+            $admin->password = Hash::make($request->input('password'));
+            $admin->phone = ($request->input('phone'));
             $admin->save();
         } else {
             return response()->json([
@@ -35,6 +36,7 @@ class AdminController extends Controller
                 "message" => "You can't Register for Admin"
             ]);
         }
+//       event(new Registered($admin));
 
 
         // send response
