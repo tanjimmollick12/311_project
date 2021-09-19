@@ -1,138 +1,124 @@
-import * as React from 'react';
-import { DataGrid } from '@material-ui/data-grid';
-import { DeleteOutline } from "@material-ui/icons";
-import Button from '@material-ui/core/Button';
+import React, { useEffect } from 'react'
+import axios from 'axios';
+import { LinkContainer } from 'react-router-bootstrap'
+import { Table, Button, Row, Col } from 'react-bootstrap'
+import { useDispatch, useSelector } from 'react-redux'
+import Message from '../../../components/Message'
+import Loader from '../../../components/Loader'
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
-import Header from '../../components/adminheader/AdminHeader'
-import { Link } from "react-router-dom";
-import './userList.css'
+import AdminHeader from '../../components/adminheader/AdminHeader';
+import { useState } from 'react';
 
-const columns = [
-  { field: 'id', headerName: 'ID', width: 100 },
-  {
-    field: "user",
-    headerName: "Image",
-    width: 200,
-    renderCell: (params) => {
-      return (
-        <div className="userListUser">
-          <img className="userListImg" src={params.row.avatar} alt="" />
-          {params.row.username}
-        </div>
-      );
+
+const CustomerTable = () => {
+
+
+  const adminLogin = useSelector((state) => state.adminLogin)
+  const { adminInfo } = adminLogin
+
+  const config = {
+    headers: {
+      Authorization: 'Bearer ' + adminInfo.token
     },
-  },
-  {
-    field: 'firstName',
-    headerName: 'First name',
-    width: 150,
-    editable: true,
-  },
+  }
 
-  {
-    field: 'lastName',
-    headerName: 'Last name',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'gender',
-    headerName: 'Gender',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'DOB',
-    headerName: 'Birth Date',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'email',
-    headerName: 'Email',
-    type: 'email',
-    width: 110,
-    editable: true,
-  },
-  {
-    field: 'password',
-    headerName: 'Password',
-    width: 150,
-    editable: true
-  }, {
-    field: 'contact',
-    headerName: 'Phone',
-    width: 150,
-    editable: true
-  },
-  {
-    field: 'activeCode',
-    headerName: 'Active Code',
-    width: 180,
-    editable: true
-  }, {
-    field: 'status',
-    headerName: 'Status',
-    width: 150,
-    editable: true
-  }, {
-    field: 'address',
-    headerName: 'Address',
-    width: 150,
-    editable: true
-  },
-  {
-    field: "action",
-    headerName: "Action",
-    width: 150,
-    renderCell: (params) => {
-      return (
-        <>
-          <Link to={"/user/" + params.row.id}>
-            <button className="userListEdit">Edit</button>
-          </Link>
-          <DeleteOutline
-            className="userListDelete"
+  const [customers, setCus] = useState([])
+  useEffect(() => {
 
-          />
-        </>
-      );
-    },
-  },
-];
+    axios.get('http://127.0.0.1:8000/api/customers', config)
+      .then(resp => {
+        setCus(resp.data)
+      })
+  }, [])
 
-const rows = [
 
-];
+  const deleteHandler = (id) => {
 
-export default function UserList() {
+    axios.delete(`http://127.0.0.1:8000/api/deletecust/${id}`, config)
+      .then(resp => {
+        console.log(resp)
+      })
+
+  }
+  const downloadHandler = () => {
+
+    axios.get(`http://127.0.0.1:8000/api/productsdownload`, config)
+      .then(resp => {
+        console.log(resp)
+      })
+
+  }
+
   return (
-    <div>
+    <>
+      <AdminHeader />
+      <Row className='align-items-center'>
+        <Col>
+          <h1>Customers</h1>
 
-      <Header />
-      <div>
-        <h1 className='heading'>User List</h1>
-        <Button
-          variant="contained"
-          color="primary"
+        </Col>
+      </Row>
+      <Row>
 
-          startIcon={<CloudDownloadIcon />}
-        >
-          Download
-        </Button>
-
-      </div>
+        <Col className='text-left'>
 
 
-      <div style={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={7}
-          checkboxSelection
-          disableSelectionOnClick
-        />
-      </div>
-    </div>
-  );
+
+          <Button className='my-3'>
+            <i className='fas fa-download' onClick={downloadHandler}></i> Download Customers
+          </Button>
+
+
+        </Col>
+
+      </Row>
+
+      <>
+        <Table
+
+          style={{ padding: "10px 10px 5px 5px", margin: "10px 10px 10px 10px" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Gender</th>
+              <th>Date Of Birth</th>
+              <th>Email</th>
+              <th>Contact</th>
+         
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map((customer) => (
+              <tr key={customer.id}>
+                <td>{customer.id}</td>
+                <td>{customer.f_name}</td>
+                <td>{customer.l_name}</td>
+                <td>{customer.gender}</td>
+                <td>{customer.DOB}</td>
+                <td>{customer.email}</td>
+                <td>{customer.contact}</td>
+          
+                <td>
+
+                  <Button
+                    variant='danger'
+                    className='btn-sm'
+                    onClick={() => deleteHandler(customer.id)}
+                  >
+                    <i className='fas fa-trash'></i>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </>
+
+    </>
+  )
 }
+
+export default CustomerTable

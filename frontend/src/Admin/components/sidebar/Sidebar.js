@@ -47,13 +47,24 @@ export default function Sidebar() {
                 Products
               </li>
             </Link>
-            <Link to="/ordertype" className="link">
+            <Link to="/orders" className="link">
               <li className="sidebarListItem">
                 <Storefront className="sidebarIcon" />
                 Orders
               </li>
             </Link>
-
+            <Link to="/shippingaddresses" className="link">
+              <li className="sidebarListItem">
+                <Storefront className="sidebarIcon" />
+                Shipping Address
+              </li>
+            </Link>
+            <Link to="/reviews" className="link">
+              <li className="sidebarListItem">
+                <Storefront className="sidebarIcon" />
+               Reviews
+              </li>
+            </Link>
           </ul>
         </div>
 

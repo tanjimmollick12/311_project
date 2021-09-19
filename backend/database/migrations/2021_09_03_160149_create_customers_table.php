@@ -18,8 +18,8 @@ class CreateCustomersTable extends Migration
             $table->string('f_name',15)->nullable();
             $table->string('l_name',15);
             $table->string('img_path',255)->nullable();
-            $table->enum('gender',['male','female']);
-            $table->date('DOB');
+            $table->enum('gender',['Male','Female']);
+            $table->date('DOB')->nullable();
             $table->string('email',35);
             $table->string('contact',11);
             $table->string('password',70);

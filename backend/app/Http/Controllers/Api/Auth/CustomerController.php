@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,6 @@ class CustomerController extends Controller
         $validator = $this->validate($request, [
             'l_name' => 'required',
             'gender' => 'required',
-            'DOB' => 'required',
             'contact' => 'required',
             'email' => 'required|email|unique:customers',
             'password' => 'required|min:6|confirmed'
@@ -29,28 +29,34 @@ class CustomerController extends Controller
 //
 
         $customer = new Customer();
-        $customer->f_name = $request->f_name;
-        $customer->l_name = $request->l_name;
-        $customer->gender = $request->gender;
-        $customer->DOB = $request->DOB;
-        $customer->contact = $request->contact;
-        $customer->email = $request->email;
-        $customer->password = Hash::make($request->password);
-        $customer->contact = ($request->contact);
-        $customer->save();
+        $customer->f_name = $request->input('f_name');;
+        $customer->l_name = $request->input('l_name');
+        $customer->gender = $request->input('gender');
+        $customer->DOB = $request->input('DOB');
+        $customer->contact = $request->input('contact');
+        $customer->email = $request->input('email');
+        $customer->password = Hash::make($request->input('password'));
 
+   $message = 'registered successfully';
         // send response
         if ($validator) {
-            return response()->json([
-
-                "status" => 1,
-                "message" => "Registered Successfully"
-            ]);
+            $customer->save();
+            $success =[
+                'status'=> 1,
+                'message'=>$message
+            ];
+            return response()->json(
+                $success
+            );
         } else {
+            $fail = [
+
+                'status'=> 0,
+                'message'=>"Invalid Input"
+            ];
+
             return response()->json([
 
-                "status" => 0,
-                "message" => 'Invalid Input'
             ]);
         }
     }
@@ -69,26 +75,51 @@ class CustomerController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+        $cid = $current_user->id;
+        $f_name = $current_user->f_name;
+        $l_name = $current_user->l_name;
+        $email = $current_user->email;
 
-        return response()->json([
-            'customer' => $current_user,
-            'token' => $current_user->createToken('mobile', ['role:customer'])->plainTextToken
-        ]);
+          $token = $current_user->createToken('mobile', ['role:customer'])->plainTextToken;
+        $data = [
+            'id'=> $cid,
+            'f_name'=> $f_name,
+            'l_name' => $l_name,
+            'email' =>$email,
+            'token' => $token
+         ];
+
+        return response()->json(
+            $data
+            );
 
     }
 
     public function profile()
     {
         $current_user_id = auth()->user()->id;
-        $current_user = DB::table('customers')->select('f_name','l_name'
-        ,'gender','img_path','DOB','')->
-        where('id', '=', $current_user_id)->
-        first();
+        DB::beginTransaction();
+        $add = DB::table('addresses')->where('CID', $current_user_id)->first();
+        if($add){
+            $current_user =    DB::table('customers')
+                ->select('customers.*','addresses.division','addresses.district',
+                    'addresses.sub_district','addresses.area')
+                ->join('addresses','customers.id','=','addresses.CID')
+                ->where('customers.id', '=', $current_user_id)
+                ->get();
+        }else{
+
+            $current_user =    DB::table('customers')
+                ->select('customers.*')
+                ->where('customers.id', '=', $current_user_id)
+                ->get();
+        }
+
+        DB::commit();
 
         return response()->json(
-            [
-                $current_user
-            ]);
+            $current_user
+        );
     }
 
     public function update(Request $request)
@@ -96,12 +127,13 @@ class CustomerController extends Controller
     {
 
         $current_cus = auth()->user();
+        $current_cus_id = auth()->user()->id;
         $current_cus->f_name = $request->f_name;
         $current_cus->l_name = $request->l_name;
         $current_cus->gender = $request->gender;
         $current_cus->DOB = $request->DOB;
         $current_cus->contact = $request->contact;
-        $current_cus_id = auth()->user()->id;
+
         $address = [
             'division' => $request->division,
             'district' => $request->district,
@@ -124,9 +156,12 @@ class CustomerController extends Controller
         // Update user
         $current_cus->update();
         DB::commit();
+        $data = [
+            "status" => 1,
+            "message" => "Profile Update Successfully"
 
-        return response()->json(["status" => 1,
-            "message" => "Profile Update Successfully"]);
+        ];
+        return response()->json($data);
 
     }
 
@@ -163,8 +198,33 @@ class CustomerController extends Controller
     public function customerTable(){
 
         $customerTable = Customer::all();
-        return response()->json([
+        return response()->json(
             $customerTable
+        );
+    }
+    public function deleteByAdmin($id){
+        $customer = Customer::find($id);
+        $customer->delete();
+        return response()->json([
+            'status' => 1,
+            'message' => 'Customer deleted Successfully'
         ]);
     }
+    public function purchaseHistory()
+    {
+        $current_user_id = auth()->user()->id;
+//        $current_user =    DB::table('products')
+//            ->select('orders.id','products.id','products.name',
+//                'orders.Del_Status')
+//            ->join('orders','products.id','=','orders.Product_ID')
+//            ->where('orders.CID', '=', $current_user_id)
+//            ->get();
+
+        $result = DB::Table('orders')->select('*')->where('orders.CID','=',$current_user_id)->get();
+        return response()->json(
+            $result
+
+        );
+    }
+
 }

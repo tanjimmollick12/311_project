@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Product_image;
 use App\Models\Review;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use App\Exports\ProductExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class ProductController extends Controller
 {
@@ -56,7 +60,7 @@ class ProductController extends Controller
             ->where('Product_ID', '=', $id)
             ->exists();
         $fileName = $request->file->getClientOriginalName();
-        $filePath = $request->file('file')->storeAs('prod_images', $fileName, 'public');
+        $filePath = $request->file('file')->storeAs('prod_images', $fileName );
         $img_path = $prod_image->image_path = '/storage/' . $filePath;
         if ($prod_id) {
             // user found
@@ -78,7 +82,7 @@ class ProductController extends Controller
 
     }
     public function updateProduct(Request $request,$id){
-        DB::beginTransaction();
+
         $name = $request->input('name');
         $Category = $request->input('Category');
         $Sub_Category = $request->input('Sub_Category');
@@ -86,8 +90,7 @@ class ProductController extends Controller
         $in  = $request->input('In_Stock');
         $Description = $request->input('Description');
         $Offer = $request->input('Offer');
-
-
+        DB::beginTransaction();
          DB::table('products')->where('id', $id)->
          update(['In_Stock' => $in,'name'=>$name,'Category'=>$Category,
              'Sub_Category'=>$Sub_Category,
@@ -131,24 +134,58 @@ class ProductController extends Controller
             "product_description"=>  $P_Description,
             "product_images"=> $images,
             "rating"=>$rate,
-            'num Of Reviews'=>$numOfReviews
+            'numOfReviews'=>$numOfReviews
 
         ]);
 
     }
     public  function productList(){
+
+
+       // $imgExist = $add = DB::table('addresses')->where('CID', $current_user_id)->first();
         $products = Product::join('product_images', 'products.id', '=', 'product_images.Product_ID')
             ->get(array_merge(['products.*'],['product_images.image_path']));
-        return response()->json([
+
+
+//      $product = Product::all();
+
+        return response()->json(
             $products
+        );
+
+    }
+    public function productDelete($id){
+
+        $product = Product::find($id);
+        $product->delete();
+        return response()->json([
+            'status' => 1,
+            'message' => 'Product deleted Successfully'
         ]);
+
 
     }
     public  function prodTable(){
         $prodTable = Product::all();
-        return response()->json([
+        return response()->json(
             $prodTable
 
-        ]);
+        );
+    }
+
+    public function downloadProducts(){
+        return Excel::download(new ProductExport,'products.xlsx');
+    }
+    public function prodAnalytics(){
+
+
+
+        $products = Order::select('Product_ID', DB::raw('sum(ProdQTY) AS totalSale'))
+            ->groupBy('Product_ID')
+            ->get();
+        return response()->json(
+          $products
+        );
+
     }
 }

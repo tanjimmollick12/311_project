@@ -1,147 +1,141 @@
-import * as React from 'react';
-import { DataGrid } from '@material-ui/data-grid';
-import { DeleteOutline } from "@material-ui/icons";
-import Button from '@material-ui/core/Button';
+import React, { useEffect } from 'react'
+import axios from 'axios';
+import { LinkContainer } from 'react-router-bootstrap'
+import { Table, Button, Row, Col } from 'react-bootstrap'
+import { useSelector } from 'react-redux'
+import Message from '../../../components/Message'
+import Loader from '../../../components/Loader'
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
-import AddIcon from '@material-ui/icons/Add';
-import Header from '../../components/adminheader/AdminHeader'
-import { Link } from "react-router-dom";
-import './productList.css'
-import { LinkContainer } from 'react-router-bootstrap';
+import AdminHeader from '../../components/adminheader/AdminHeader';
+import { useState } from 'react';
 
-const columns = [
-  { field: 'id', headerName: 'ID', width: 100 },
-  {
-    field: "prod_image",
-    headerName: "Image",
-    width: 170,
-    renderCell: (params) => {
-      return (
-        <div className="userListUser">
-          <img className="userListImg" src={params.row.avatar} alt="" />
-          {params.row.username}
-        </div>
-      );
+
+const ProductTable = () => {
+
+
+  const adminLogin = useSelector((state) => state.adminLogin)
+  const { adminInfo } = adminLogin
+
+  const config = {
+    headers: {
+      Authorization: 'Bearer ' + adminInfo.token
     },
-  },
-  {
-    field: 'prod_name',
-    headerName: 'Product Name',
-    width: 150,
-    editable: true,
-  },
-
-  {
-    field: 'cat_name',
-    headerName: 'Category',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'subcat_name',
-    headerName: 'Sub-Category',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'price',
-    headerName: 'Price',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'upload',
-    headerName: 'Added At',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'ais',
-    headerName: 'In Stock',
-    width: 150,
-    editable: true
-  }, {
-    field: 'description',
-    headerName: 'Description',
-    width: 150,
-    editable: true
-  },
-
-  {
-    field: "action",
-    headerName: "Action",
-    width: 150,
-    renderCell: (params) => {
-      return (
-        <>
-          <Link to={"/productedit"}>
-            <button className="userListEdit">Edit</button>
-          </Link>
-          <DeleteOutline
-            className="userListDelete"
-
-          />
-        </>
-      );
-    },
-  },
-];
-
-const rows = [
-  {
-    id:1,
   }
-  
 
-];
+  const [products, setProduct] = useState([])
+  useEffect(() => {
 
-export default function ProductList() {
+    axios.get('http://127.0.0.1:8000/api/products', config)
+      .then(resp => {
+        setProduct(resp.data)
+      })
+  }, [])
+
+  const [message, setMessage] = useState()
+  const deleteHandler = (id) => {
+
+    axios.delete(`http://127.0.0.1:8000/api/deleteproduct/${id}`, config)
+    .then(resp => {
+      setMessage(resp.data.message)
+    })
+
+  }
+  const downloadHandler = () => {
+
+    axios.get(`http://127.0.0.1:8000/api/productsdownload`, config)
+      .then(resp => {
+        console.log(resp)
+      })
+
+  }
+
   return (
-    <div>
+    <>
+      <AdminHeader />
+      <Message variant='danger'>{message}</Message>
+      <Row className='align-items-center'>
+        <Col>
+          <h1>Products</h1>
 
-      <Header />
-      <div>
-        <h1 className='heading'>Product List</h1>
-        <div>
+        </Col>
+      </Row>
+      <Row>
 
-          <Button
-            variant="contained"
-            color="primary"
+        <Col className='text-left'>
 
-            startIcon={<CloudDownloadIcon />}
-          >
-            Download
+
+
+          <Button className='my-3'>
+            <i className='fas fa-download' onClick={downloadHandler}></i> Download Products
           </Button>
 
+
+        </Col>
+        <Col className='text-right'>
           <LinkContainer to='/newproduct'>
 
-            <Button
-              variant="contained"
-              color="secondary"
-              className='add'
-              startIcon={<AddIcon />}
-            >
-              Add Product
+            <Button className='my-3'>
+              <i className='fas fa-plus'></i> Create Product
             </Button>
+
           </LinkContainer>
 
+        </Col>
+      </Row>
 
+      <>
+        <Table
 
-        </div>
+          style={{ padding: "10px 10px 5px 5px", margin: "10px 10px 10px 10px" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>In Stock</th>
+              <th>Offer</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product.id}>
+                <td>{product.id}</td>
+                <td>{product.name}</td>
+                <td>{product.price} TK</td>
+                <td>{product.Category}</td>
+                <td>{product.Description}</td>
+                <td>{product.In_Stock}</td>
+                <td>{product.Offer}</td>
+                <td>
+                  <LinkContainer to={`/addimage/${product.id}`}>
+                    <Button variant='light' className='btn-sm'>
+                      <i className='fas fa-plus'></i>
+                    </Button>
+                  </LinkContainer>
+                  <LinkContainer to={`/updateproduct/${product.id}`}>
+                    <Button variant='light' className='btn-sm'>
+                      <i className='fas fa-edit'></i>
+                    </Button>
+                  </LinkContainer>
+                  <Button
+                    variant='danger'
+                    className='btn-sm'
+                    onClick={() => deleteHandler(product.id)}
+                  >
+                    <i className='fas fa-trash'></i>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </>
 
-
-      </div>
-
-
-      <div style={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={7}
-          checkboxSelection
-          disableSelectionOnClick
-        />
-      </div>
-    </div>
-  );
+    </>
+  )
 }
+
+export default ProductTable

@@ -6,6 +6,7 @@ import {
   PhoneAndroid,
   Publish,
 } from "@material-ui/icons";
+import { Table, Row, Col } from 'react-bootstrap'
 import { Link } from "react-router-dom";
 import "./user.css";
 import Header from "../adminheader/AdminHeader";
@@ -14,53 +15,56 @@ import { DataGrid } from '@material-ui/data-grid';
 import { DeleteOutline } from "@material-ui/icons";
 import Button from '@material-ui/core/Button';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
+import { LinkContainer } from "react-router-bootstrap";
+import { useDispatch, useSelector } from 'react-redux'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
-
-const columns = [
-
-  {
-    field: 'order_id',
-    headerName: 'Order ID',
-    width: 150
-  },
-
-
-  {
-    field: 'product_id',
-    headerName: 'Product ID',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'product_name',
-    headerName: 'Product Name',
-    width: 180,
-    editable: true,
-  },
-
-  {
-    field: 'delivered_at',
-    headerName: 'Delivered Time',
-    width: 200,
-    editable: true,
-  },
-
-];
-const rows = [
-  {
-    id: 1,
-    order_id:1,
-    product_id: 5,
-    product_name: 'T-shirt',
-    delivered_at: '08/24/2021 01:44:25 PM',
-
-  }
-];
 
 export default function User() {
+
+  const dispatch = useDispatch()
+  const userLogin = useSelector((state) => state.userLogin)
+  const { userInfo } = userLogin
+  if (!userInfo) {
+    document.location = '/login'
+  }
+  console.log(userInfo.token)
+  const config = {
+    headers: {
+      Authorization: 'Bearer ' + userInfo.token
+    },
+  }
+
+  const [customer, setCustomer] = useState([])
+
+  useEffect(() => {
+
+    axios.get('http://127.0.0.1:8000/api/profile', config)
+      .then(
+        res => {
+
+          setCustomer(res.data)
+        }
+
+      ).catch(err => {
+        console.log(err)
+      })
+
+  }, [])
+
+  const [purchases, setPurchase] = useState([])
+  useEffect(() => {
+
+    axios.get('http://127.0.0.1:8000/api/purchased', config)
+      .then(resp => {
+        setPurchase(resp.data)
+      })
+  }, [])
+
   return (
     <div className="user">
-   
+
       <div className="userTitleContainer">
         <h1 className="userUpdateTitle">User Details</h1>
 
@@ -69,56 +73,85 @@ export default function User() {
         <div className="userShow">
           <div className="userShowTop">
             <img
-              src="https://images.pexels.com/photos/1152994/pexels-photo-1152994.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500"
+              src={'http://127.0.0.1:8000' + customer.map(c => c.img_path)}
               alt=""
               className="userShowImg"
             />
             <div className="userShowTopTitle">
-              <span className="userShowUsername">Ahalya Mitra</span>
-              <span className="userShowUserTitle">Female</span>
+              <span className="userShowUsername">{customer.map(c => c.f_name) + ' ' + customer.map(c => c.l_name)}</span>
+              <span className="userShowUserTitle">{customer.map(c => c.gender)}</span>
             </div>
           </div>
           <div className="userShowBottom">
             <span className="userShowTitle">Account Details</span>
             <div className="userShowInfo">
-              <PermIdentity className="userShowIcon" />
-              <span className="userShowInfoTitle">ahalya99</span>
+
             </div>
             <div className="userShowInfo">
               <CalendarToday className="userShowIcon" />
-              <span className="userShowInfoTitle">10.12.1999</span>
+              <span className="userShowInfoTitle">{customer.map(c => c.DOB)}</span>
             </div>
             <span className="userShowTitle">Contact Details</span>
             <div className="userShowInfo">
               <PhoneAndroid className="userShowIcon" />
-              <span className="userShowInfoTitle">+1 123 456 67</span>
+              <span className="userShowInfoTitle">{customer.map(c => c.contact)}</span>
             </div>
             <div className="userShowInfo">
               <MailOutline className="userShowIcon" />
-              <span className="userShowInfoTitle">ahalya999@gmail.com</span>
+              <span className="userShowInfoTitle">{customer.map(c => c.email)}</span>
             </div>
             <div className="userShowInfo">
               <LocationSearching className="userShowIcon" />
-              <span className="userShowInfoTitle">Dhaka | Bangladesh</span>
+              <span className="userShowInfoTitle">{customer.map(c => c.division) + ' | ' + customer.map(c => c.district)}</span>
             </div>
-            <div style={{ float:'right' }}>
-              <Button>Edit</Button>
+            <div style={{ float: 'right' }}>
+              <LinkContainer to="/edit">
+                <Button>Edit</Button>
+              </LinkContainer>
+
             </div>
           </div>
         </div>
         <div className="userUpdate">
           <span className="userUpdateTitle">Purchase History</span>
           <div style={{ height: 400, width: '100%' }}>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              pageSize={7}
-              checkboxSelection
-              disableSelectionOnClick
-            />
+            <Table
+
+              style={{ padding: "10px 10px 5px 5px", margin: "10px 10px 10px 10px" }}>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Product ID</th>
+                  <th>Products Quantity</th>
+                  <th>Amount</th>
+                  <th>Payment Status</th>
+                  <th>Delivery Status</th>
+                  <th>Order Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchases.map((purchase) => (
+                  <tr key={purchase.id}>
+                     <td>{purchase.id}</td>
+                    <td>{purchase.Product_ID}</td>
+                    <td>{purchase.ProdQTY}</td>
+                    <td>{purchase.Amount}</td>
+                    <td>{purchase.payment_status}</td>
+                    <td>{purchase.Del_Status}</td>
+                    <td>{purchase.created_at}</td>
+        
+                    <td>
+        
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           </div>
         </div>
       </div>
     </div>
   );
+
 }
+

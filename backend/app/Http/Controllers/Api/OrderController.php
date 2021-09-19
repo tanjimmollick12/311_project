@@ -111,13 +111,26 @@ class OrderController extends Controller
         }
 
     }
+    public function totalSale(){
+        $totalSale = Order::sum('Amount');
+        return response()->json(
+            $totalSale
+        );
+
+    }
 
     public function orderTable(){
 
         $orderTable = Order::all();
-        return response()->json([
+        return response()->json(
             $orderTable
+        );
+    }
+    public function shippingAddTable(){
 
-        ]);
+        $shippingTable = Shipping_Address::all();
+        return response()->json(
+            $shippingTable
+        );
     }
 }

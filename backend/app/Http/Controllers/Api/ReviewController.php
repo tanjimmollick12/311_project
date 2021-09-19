@@ -2,7 +2,6 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Product_image;
 use Illuminate\Http\Request;
 use App\Models\Review;
 use Illuminate\Support\Facades\DB;
@@ -98,5 +97,13 @@ class ReviewController extends Controller
 
         }
 
+    }
+
+    public function reviewTable(){
+
+        $shippingTable = Review::all();
+        return response()->json(
+            $shippingTable
+        );
     }
 }

@@ -1,21 +1,52 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Row, Col, Image, ListGroup, Card, Button, Form, Container } from 'react-bootstrap'
 import Header from '../../components/Header'
 import Rating from '../../components/Rating'
 import products from '../../products'
 import Footer from '../../components/Footer'
+import Message from '../../components/Message'
+import { clearCart } from '../../actions/cartActions'
+import Loader from '../../components/Loader'
+import {listProductDetails} from '../../actions/productActions'
+import { useDispatch, useSelector } from 'react-redux'
+import { LinkContainer } from 'react-router-bootstrap'
+function ProductPage({ history, match }) {
+    const [qty, setQty] = useState(1)
+    const dispatch = useDispatch()
+    const productDetails = useSelector((state) => state.productDetails)
+    const { loading, error, product } = productDetails
+    useEffect(() => {
+        dispatch(listProductDetails(match.params.id))
+      }, [dispatch,match])
 
-function ProductPage({ match }) {
-    const product = products.find((p) => p._id === match.params.id)
+      const addToCartHandler = () => {
+        history.push(`/cart/${match.params.id}?qty=${qty}`)
+      }
+      const clearCartHandler = () =>{
+
+        dispatch(clearCart())
+      }
+      function add_to() {
+        clearCartHandler();
+        addToCartHandler();
+    }
+    console.log(product.id)
     return (
         <>
             <Header />
-            <Container>
+            <Container key={product.id}>
                 <br />
                 <Row>
 
                     <Col md={4}>
-                        <Image src={product.image} alt={product.name} style={{ height: '500px', width: '350px' }} />
+                        <Image src={'http://127.0.0.1:8000/'+product.product_images} alt={product.product_name} style={{ height: '500px', width: '350px' }} />
+                   
+                 <Row>
+                  <LinkContainer to={`/review/${match.params.id}`}>
+                     <Button>Review</Button>
+
+                     </LinkContainer>
+                 </Row>
                     </Col>
                     <Col md={3}>
 
@@ -23,19 +54,19 @@ function ProductPage({ match }) {
 
                             <ListGroup.Item>
 
-                                <h3>{product.name}</h3>
+                                <h3>{product.product_name}</h3>
                             </ListGroup.Item>
                             <ListGroup.Item>
                                 <Rating
                                     value={product.rating}
-                                    text={`${product.numReviews} reviews`}
+                                    text={`${product.numOfReviews} reviews`}
                                 />
                             </ListGroup.Item>
                             <ListGroup.Item>
-                                Price:  {product.price} TK
+                                Price:  {product.product_price} TK
                             </ListGroup.Item>
                             <ListGroup.Item>
-                                Description:  {product.description}
+                                Description:  {product.product_description}
                             </ListGroup.Item>
 
                         </ListGroup>
@@ -47,7 +78,7 @@ function ProductPage({ match }) {
                                     <Row>
                                         <Col>Price:</Col>
                                         <Col>
-                                            <strong>{product.price} TK</strong>
+                                            <strong>{product.product_price} TK</strong>
                                         </Col>
                                     </Row>
                                 </ListGroup.Item>
@@ -56,20 +87,22 @@ function ProductPage({ match }) {
                                     <Row>
                                         <Col>Status:</Col>
                                         <Col>
-                                            {product.countInStock > 0 ? 'In Stock' : 'Out Of Stock'}
+                                            {product.product_inStock > 0 ? 'In Stock' : 'Out Of Stock'}
                                         </Col>
                                     </Row>
                                 </ListGroup.Item>
-                                {product.countInStock > 0 && (
+                                {product.product_inStock > 0 && (
                                     <ListGroup.Item>
                                         <Row>
                                             <Col>Qty</Col>
                                             <Col>
                                                 <Form.Control
                                                     as='select'
+                                                    value={qty}
+                                                    onChange={(e) => setQty(e.target.value)}
 
                                                 >
-                                                    {[...Array(product.countInStock).keys()].map(
+                                                    {[...Array(product.product_inStock).keys()].map(
                                                         (x) => (
                                                             <option key={x + 1} value={x + 1}>
                                                                 {x + 1}
@@ -84,10 +117,10 @@ function ProductPage({ match }) {
 
                                 <ListGroup.Item>
                                     <Button
-
+                                   onClick={ add_to}
                                         className='btn-block'
                                         type='button'
-                                        disabled={product.countInStock === 0}
+                                        disabled={product.product_inStock === 0}
                                     >
                                         Add To Cart
                                     </Button>

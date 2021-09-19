@@ -71,7 +71,7 @@ class AdminController extends Controller
                 return response()->json([
                     "status" => 1,
                     "message" => "Admin Logged In Successfully",
-                    "access_toke" => $token,
+                    "token" => $token,
                     "name" => $admin->name,
                     "email" => $admin->email,
                     "password" => $admin->password

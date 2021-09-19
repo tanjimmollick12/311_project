@@ -1,39 +1,42 @@
 import "./featuredInfo.css";
-import { ArrowDownward, ArrowUpward } from "@material-ui/icons";
-
+import React, { useEffect, useState } from 'react'
+import axios from 'axios';
+import { useSelector } from 'react-redux'
 export default function FeaturedInfo() {
+  const adminLogin = useSelector((state) => state.adminLogin)
+  const { adminInfo } = adminLogin
+
+  const config = {
+    headers: {
+      Authorization: 'Bearer ' + adminInfo.token
+    },
+  }
+
+  const [totalSale, setTotalsale] = useState()
+
+  useEffect(() => {
+
+    axios.get('http://127.0.0.1:8000/api/totalsale', config)
+      .then(resp => {
+        setTotalsale(resp.data)
+      })
+  }, )
+
+
+
   return (
+
+
     <div className="featured">
-      <div className="featuredItem">
-        <span className="featuredTitle">Revanue</span>
-        <div className="featuredMoneyContainer">
-          <span className="featuredMoney">$2,415</span>
-          <span className="featuredMoneyRate">
-            -11.4 <ArrowDownward  className="featuredIcon negative"/>
-          </span>
-        </div>
-        <span className="featuredSub">Compared to last month</span>
-      </div>
+
       <div className="featuredItem">
         <span className="featuredTitle">Sales</span>
         <div className="featuredMoneyContainer">
-          <span className="featuredMoney">$4,415</span>
-          <span className="featuredMoneyRate">
-            -1.4 <ArrowDownward className="featuredIcon negative"/>
-          </span>
+          <span className="featuredMoney">{totalSale} TK</span>
         </div>
-        <span className="featuredSub">Compared to last month</span>
+
       </div>
-      <div className="featuredItem">
-        <span className="featuredTitle">Cost</span>
-        <div className="featuredMoneyContainer">
-          <span className="featuredMoney">$2,225</span>
-          <span className="featuredMoneyRate">
-            +2.4 <ArrowUpward className="featuredIcon"/>
-          </span>
-        </div>
-        <span className="featuredSub">Compared to last month</span>
-      </div>
+
     </div>
   );
 }
